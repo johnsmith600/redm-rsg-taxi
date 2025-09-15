@@ -1,5 +1,15 @@
 -- Database Management for RSG Taxi System
 
+local RSGCore = exports['rsg-core']:GetCoreObject()
+
+-- Wait for RSGCore to be ready
+CreateThread(function()
+    while not RSGCore do
+        Wait(10)
+        RSGCore = exports['rsg-core']:GetCoreObject()
+    end
+end)
+
 -- Create database tables
 RegisterNetEvent('rsg-taxi:server:createTables', function()
     -- Taxi drivers table
@@ -235,81 +245,7 @@ function SaveVehicleData(plate, model, driverCitizenid, coords)
     })
 end
 
--- Get driver statistics
-RSGCore.Functions.CreateCallback('rsg-taxi:server:getDriverStats', function(source, cb)
-    local Player = RSGCore.Functions.GetPlayer(source)
-    if not Player then
-        cb(nil)
-        return
-    end
-    
-    local citizenid = Player.PlayerData.citizenid
-    
-    MySQL.query([[
-        SELECT 
-            d.*,
-            COUNT(r.id) as completed_rides,
-            SUM(r.fare + r.tip) as total_earned,
-            AVG(rt.rating) as avg_rating
-        FROM taxi_drivers d
-        LEFT JOIN taxi_rides r ON d.citizenid = r.driver_citizenid AND r.status = 'completed'
-        LEFT JOIN taxi_ratings rt ON d.citizenid = rt.driver_citizenid
-        WHERE d.citizenid = ?
-        GROUP BY d.id
-    ]], {citizenid}, function(result)
-        if result and result[1] then
-            cb(result[1])
-        else
-            cb(nil)
-        end
-    end)
-end)
 
--- Get ride history
-RSGCore.Functions.CreateCallback('rsg-taxi:server:getRideHistory', function(source, cb, limit)
-    local Player = RSGCore.Functions.GetPlayer(source)
-    if not Player then
-        cb({})
-        return
-    end
-    
-    local citizenid = Player.PlayerData.citizenid
-    limit = limit or 50
-    
-    MySQL.query([[
-        SELECT 
-            r.*,
-            rt.rating,
-            rt.comment
-        FROM taxi_rides r
-        LEFT JOIN taxi_ratings rt ON r.ride_id = rt.ride_id
-        WHERE r.driver_citizenid = ? OR r.passenger_citizenid = ?
-        ORDER BY r.created_at DESC
-        LIMIT ?
-    ]], {citizenid, citizenid, limit}, function(result)
-        cb(result or {})
-    end)
-end)
-
--- Get top drivers
-RSGCore.Functions.CreateCallback('rsg-taxi:server:getTopDrivers', function(source, cb, limit)
-    limit = limit or 10
-    
-    MySQL.query([[
-        SELECT 
-            player_name,
-            total_rides,
-            total_earnings,
-            rating,
-            total_rating_count
-        FROM taxi_drivers
-        WHERE total_rides > 0
-        ORDER BY rating DESC, total_rides DESC
-        LIMIT ?
-    ]], {limit}, function(result)
-        cb(result or {})
-    end)
-end)
 
 -- Clean up old data
 CreateThread(function()

@@ -1,5 +1,15 @@
 -- Server Callbacks for RSG Taxi System
 
+local RSGCore = exports['rsg-core']:GetCoreObject()
+
+-- Wait for RSGCore to be ready
+CreateThread(function()
+    while not RSGCore do
+        Wait(10)
+        RSGCore = exports['rsg-core']:GetCoreObject()
+    end
+end)
+
 -- Get available taxi drivers
 RSGCore.Functions.CreateCallback('rsg-taxi:server:getAvailableDrivers', function(source, cb, coords)
     local availableDrivers = {}
