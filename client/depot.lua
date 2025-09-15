@@ -237,9 +237,13 @@ RegisterNetEvent('rsg-taxi:client:spawnDepotVehicle', function(data)
         -- Find a clear spawn location near the depot
         local spawnCoords = GetClearSpawnLocation(depot.coords, depot.heading)
         if not spawnCoords then
+            print('[RSG-TAXI] No clear spawn location found at depot: ' .. depot.name)
             TriggerEvent('RSGCore:Notify', Lang:t('error.no_clear_spawn_location'), 'error')
             return
         end
+        
+        print('[RSG-TAXI] Spawn location found: ' .. spawnCoords.x .. ', ' .. spawnCoords.y .. ', ' .. spawnCoords.z)
+        print('[RSG-TAXI] Requesting vehicle spawn: ' .. model)
         
         -- Request vehicle spawn
         TriggerServerEvent('rsg-taxi:server:spawnDepotVehicle', model, spawnCoords, depot.heading)
@@ -365,13 +369,22 @@ end)
 
 -- Vehicle spawned from depot
 RegisterNetEvent('rsg-taxi:client:vehicleSpawnedFromDepot', function(netId)
+    print('[RSG-TAXI] Received vehicle spawn event with netId: ' .. netId)
+    
     local vehicle = NetToVeh(netId)
+    print('[RSG-TAXI] Converted to vehicle ID: ' .. vehicle)
+    
     if DoesEntityExist(vehicle) then
+        print('[RSG-TAXI] Vehicle exists, warping player into vehicle')
+        
         -- Set player as driver
         TaskWarpPedIntoVehicle(PlayerPedId(), vehicle, -1)
         TriggerEvent('RSGCore:Notify', Lang:t('success.taxi_vehicle_ready'), 'success')
         
         -- Show instructions
         TriggerEvent('RSGCore:Notify', Lang:t('info.taxi_driver_instructions'), 'primary')
+    else
+        print('[RSG-TAXI] Vehicle does not exist on client side')
+        TriggerEvent('RSGCore:Notify', 'Vehicle spawn failed - vehicle not found', 'error')
     end
 end)

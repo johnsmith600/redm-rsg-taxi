@@ -636,7 +636,10 @@ end)
 RegisterNetEvent('rsg-taxi:server:spawnDepotVehicle', function(model, coords, heading)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
-    if not Player then return end
+    if not Player then 
+        print('[RSG-TAXI] Player not found for source: ' .. src)
+        return 
+    end
     
     -- Check if player already has a taxi vehicle
     if TaxiDrivers[src] and TaxiDrivers[src].vehicle then
@@ -644,9 +647,33 @@ RegisterNetEvent('rsg-taxi:server:spawnDepotVehicle', function(model, coords, he
         return
     end
     
+    print('[RSG-TAXI] Attempting to spawn vehicle: ' .. model .. ' at coords: ' .. coords.x .. ', ' .. coords.y .. ', ' .. coords.z)
+    
+    -- Get model hash
+    local modelHash = GetHashKey(model)
+    print('[RSG-TAXI] Model hash: ' .. modelHash)
+    
+    -- Request model
+    RequestModel(modelHash)
+    local timeout = 0
+    while not HasModelLoaded(modelHash) and timeout < 5000 do
+        Wait(10)
+        timeout = timeout + 10
+    end
+    
+    if not HasModelLoaded(modelHash) then
+        print('[RSG-TAXI] Failed to load model: ' .. model)
+        TriggerClientEvent('RSGCore:Notify', src, 'Failed to load vehicle model: ' .. model, 'error')
+        return
+    end
+    
     -- Spawn the vehicle
-    local vehicle = CreateVehicle(GetHashKey(model), coords.x, coords.y, coords.z, heading, true, false)
+    local vehicle = CreateVehicle(modelHash, coords.x, coords.y, coords.z, heading, true, false)
+    print('[RSG-TAXI] Vehicle created with ID: ' .. vehicle)
+    
     if DoesEntityExist(vehicle) then
+        print('[RSG-TAXI] Vehicle exists, setting properties')
+        
         -- Set vehicle properties
         SetVehicleNumberPlateText(vehicle, 'TAXI' .. src)
         SetVehicleEngineOn(vehicle, false, false, false)
@@ -663,12 +690,18 @@ RegisterNetEvent('rsg-taxi:server:spawnDepotVehicle', function(model, coords, he
             onDuty = false
         }
         
+        print('[RSG-TAXI] Vehicle spawned successfully, sending to client')
+        
         -- Notify client
         TriggerClientEvent('rsg-taxi:client:vehicleSpawnedFromDepot', src, NetworkGetNetworkIdFromEntity(vehicle))
         TriggerClientEvent('RSGCore:Notify', src, Lang:t('success.taxi_vehicle_spawned'), 'success')
     else
+        print('[RSG-TAXI] Vehicle does not exist after creation')
         TriggerClientEvent('RSGCore:Notify', src, Lang:t('error.vehicle_spawn_failed'), 'error')
     end
+    
+    -- Clean up model
+    SetModelAsNoLongerNeeded(modelHash)
 end)
 
 RegisterNetEvent('rsg-taxi:server:returnVehicleToDepot', function(netId)
