@@ -1,3 +1,5 @@
+# This Has Been Archived and is not functional #
+
 # RSG Taxi System for RedM
 
 An advanced taxi system for RedM servers using the RSG2 framework. This comprehensive system provides both player-driven and NPC taxi services with a modern web-based interface.
