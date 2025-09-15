@@ -59,6 +59,11 @@ end
 
 -- Spawn NPC Taxi
 function SpawnNPCTaxi(passengerId, pickupCoords, destination)
+    print("^2[RSG-Taxi Debug]^7 SpawnNPCTaxi called with:")
+    print("^2[RSG-Taxi Debug]^7 passengerId:", passengerId)
+    print("^2[RSG-Taxi Debug]^7 pickupCoords:", type(pickupCoords), pickupCoords)
+    print("^2[RSG-Taxi Debug]^7 destination:", type(destination), destination)
+    
     if #NPCTaxis >= Config.NPCTaxis.MaxNPCTaxis then
         return false
     end
@@ -307,10 +312,28 @@ end
 function FindNPCSpawnLocation(pickupCoords)
     local spawnLocations = {}
     
+    -- Debug: Print pickupCoords structure
+    print("^2[RSG-Taxi Debug]^7 pickupCoords type:", type(pickupCoords))
+    if type(pickupCoords) == 'table' then
+        print("^2[RSG-Taxi Debug]^7 pickupCoords content:", json.encode(pickupCoords))
+    end
+    
     -- Convert pickupCoords to vector3 if it's a table
     local pickup = pickupCoords
     if type(pickupCoords) == 'table' then
-        pickup = vector3(pickupCoords.x or pickupCoords[1], pickupCoords.y or pickupCoords[2], pickupCoords.z or pickupCoords[3])
+        local x = pickupCoords.x or pickupCoords[1] or 0.0
+        local y = pickupCoords.y or pickupCoords[2] or 0.0
+        local z = pickupCoords.z or pickupCoords[3] or 0.0
+        
+        print("^2[RSG-Taxi Debug]^7 Extracted coords - x:", x, "y:", y, "z:", z)
+        
+        -- Ensure we have valid numbers
+        if type(x) == 'number' and type(y) == 'number' and type(z) == 'number' then
+            pickup = vector3(x, y, z)
+        else
+            print("^1[RSG-Taxi Error]^7 Invalid coordinate values - x:", type(x), "y:", type(y), "z:", type(z))
+            return nil
+        end
     end
     
     -- Add configured spawn locations

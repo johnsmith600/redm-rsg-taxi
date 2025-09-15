@@ -194,7 +194,7 @@ RegisterNetEvent('rsg-taxi:server:requestRide', function(pickupCoords, destinati
     if not availableDriver then
         -- Add to queue or spawn NPC taxi
         if Config.NPCTaxis.Enabled then
-            TriggerClientEvent('rsg-taxi:client:spawnNPCTaxi', src, pickupCoords, destination)
+            TriggerClientEvent('rsg-taxi:client:spawnNPCTaxi', src, src, pickupCoords, destination)
         else
             TriggerClientEvent('RSGCore:Notify', src, Lang:t('error.no_nearby_taxis'), 'error')
         end
