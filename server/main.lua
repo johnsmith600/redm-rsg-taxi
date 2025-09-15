@@ -695,12 +695,21 @@ RegisterNetEvent('rsg-taxi:server:spawnDepotVehicle', function(model, coords, he
         end
     end
     
-    -- Spawn the vehicle
-    local vehicle = CreateVehicle(modelHash, coords.x, coords.y, coords.z, heading, true, false)
+    -- Try RSGCore vehicle creation first if available
+    local vehicle = nil
+    if RSGCore.Functions.SpawnVehicle then
+        print('[RSG-TAXI] Using RSGCore.Functions.SpawnVehicle')
+        vehicle = RSGCore.Functions.SpawnVehicle(src, model, coords, true)
+    else
+        print('[RSG-TAXI] Using native CreateVehicle')
+        -- Spawn the vehicle using native function
+        vehicle = CreateVehicle(modelHash, coords.x, coords.y, coords.z, heading, true, false)
+    end
+    
     print('[RSG-TAXI] Vehicle created with ID: ' .. vehicle)
     
     -- Wait a moment for the vehicle to be properly created and networked
-    Wait(100)
+    Wait(200)
     
     if DoesEntityExist(vehicle) then
         print('[RSG-TAXI] Vehicle exists, setting properties')
@@ -733,6 +742,83 @@ RegisterNetEvent('rsg-taxi:server:spawnDepotVehicle', function(model, coords, he
     
     -- Clean up model
     SetModelAsNoLongerNeeded(modelHash)
+end)
+
+-- Test command to spawn vehicle directly
+RegisterCommand('testtaxispawn', function(source, args, rawCommand)
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local playerPed = GetPlayerPed(src)
+    local playerCoords = GetEntityCoords(playerPed)
+    
+    print('[RSG-TAXI TEST] Player coords: ' .. playerCoords.x .. ', ' .. playerCoords.y .. ', ' .. playerCoords.z)
+    
+    -- Try to spawn a simple cart
+    local model = 'cart01'
+    local modelHash = GetHashKey(model)
+    
+    print('[RSG-TAXI TEST] Trying to spawn: ' .. model .. ' with hash: ' .. modelHash)
+    
+    -- Request model
+    RequestModel(modelHash)
+    local timeout = 0
+    while not HasModelLoaded(modelHash) and timeout < 5000 do
+        Wait(10)
+        timeout = timeout + 10
+    end
+    
+    if HasModelLoaded(modelHash) then
+        print('[RSG-TAXI TEST] Model loaded successfully')
+        
+        local spawnCoords = vector3(playerCoords.x + 3.0, playerCoords.y + 3.0, playerCoords.z)
+        local vehicle = CreateVehicle(modelHash, spawnCoords.x, spawnCoords.y, spawnCoords.z, 0.0, true, false)
+        
+        print('[RSG-TAXI TEST] CreateVehicle returned: ' .. vehicle)
+        
+        Wait(500)
+        
+        if DoesEntityExist(vehicle) then
+            print('[RSG-TAXI TEST] Vehicle exists! ID: ' .. vehicle)
+            TriggerClientEvent('RSGCore:Notify', src, 'Test vehicle spawned successfully!', 'success')
+        else
+            print('[RSG-TAXI TEST] Vehicle does not exist after creation')
+            TriggerClientEvent('RSGCore:Notify', src, 'Test vehicle spawn failed', 'error')
+        end
+    else
+        print('[RSG-TAXI TEST] Failed to load model: ' .. model)
+        TriggerClientEvent('RSGCore:Notify', src, 'Failed to load test model', 'error')
+    end
+    
+    SetModelAsNoLongerNeeded(modelHash)
+end, false)
+
+-- Handle client-side spawned vehicles
+RegisterNetEvent('rsg-taxi:server:clientVehicleSpawned', function(netId, model)
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local vehicle = NetworkGetEntityFromNetworkId(netId)
+    print('[RSG-TAXI] Client spawned vehicle received on server: ' .. vehicle)
+    
+    if DoesEntityExist(vehicle) then
+        -- Register as taxi driver
+        TaxiDrivers[src] = {
+            name = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname,
+            vehicle = vehicle,
+            coords = GetEntityCoords(vehicle),
+            passengers = 0,
+            earnings = TaxiDrivers[src] and TaxiDrivers[src].earnings or 0,
+            rides = TaxiDrivers[src] and TaxiDrivers[src].rides or 0,
+            rating = TaxiDrivers[src] and TaxiDrivers[src].rating or Config.RatingSystem.DefaultRating,
+            onDuty = false
+        }
+        
+        print('[RSG-TAXI] Client-spawned vehicle registered for player: ' .. src)
+        TriggerClientEvent('rsg-taxi:client:startWork', src)
+    end
 end)
 
 RegisterNetEvent('rsg-taxi:server:returnVehicleToDepot', function(netId)

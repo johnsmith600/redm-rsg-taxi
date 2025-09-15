@@ -12,16 +12,16 @@ Config.MaxTaxiDrivers = 50 -- Maximum taxi drivers allowed online (increased sin
 
 -- Vehicle Settings
 Config.TaxiVehicles = {
+    'cart01',      -- Simple cart (most basic)
+    'cart02',      -- Another cart variant  
     'buggy01',     -- Horse-drawn buggy
-    'cart01',      -- Simple cart  
     'wagon02',     -- Covered wagon
     'coach2',      -- Stagecoach
-    'coach3',      -- Another coach variant
-    'coach4',      -- Fancy coach
-    'coach5',      -- Armored coach
-    'coach6',      -- Prison wagon
-    'buggy02',     -- Another buggy
-    'buggy03',     -- Fancy buggy
+    'huntercart01', -- Hunter cart
+    'logwagon',    -- Log wagon
+    'armySupplyWagon', -- Army supply wagon
+    'chuckwagon000x', -- Chuck wagon
+    'chuckwagon002x', -- Chuck wagon variant
 }
 
 -- Taxi Depot Locations (where players get vehicles)

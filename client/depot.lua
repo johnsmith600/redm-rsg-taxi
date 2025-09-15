@@ -245,7 +245,10 @@ RegisterNetEvent('rsg-taxi:client:spawnDepotVehicle', function(data)
         print('[RSG-TAXI] Spawn location found: ' .. spawnCoords.x .. ', ' .. spawnCoords.y .. ', ' .. spawnCoords.z)
         print('[RSG-TAXI] Requesting vehicle spawn: ' .. model)
         
-        -- Request vehicle spawn
+        -- Try client-side spawn first
+        TriggerEvent('rsg-taxi:client:tryClientSpawn', model, spawnCoords, depot.heading)
+        
+        -- Also request server-side spawn as backup
         TriggerServerEvent('rsg-taxi:server:spawnDepotVehicle', model, spawnCoords, depot.heading)
     end)
 end)
@@ -408,3 +411,90 @@ RegisterNetEvent('rsg-taxi:client:vehicleSpawnedFromDepot', function(netId)
         TriggerEvent('RSGCore:Notify', 'Vehicle spawn failed - vehicle not found', 'error')
     end
 end)
+
+-- Client-side vehicle spawn attempt
+RegisterNetEvent('rsg-taxi:client:tryClientSpawn', function(model, coords, heading)
+    print('[RSG-TAXI] Attempting client-side vehicle spawn: ' .. model)
+    
+    local modelHash = GetHashKey(model)
+    print('[RSG-TAXI] Client model hash: ' .. modelHash)
+    
+    -- Request model on client
+    RequestModel(modelHash)
+    local timeout = 0
+    while not HasModelLoaded(modelHash) and timeout < 5000 do
+        Wait(10)
+        timeout = timeout + 10
+    end
+    
+    if HasModelLoaded(modelHash) then
+        print('[RSG-TAXI] Client model loaded, creating vehicle')
+        
+        -- Create vehicle on client
+        local vehicle = CreateVehicle(modelHash, coords.x, coords.y, coords.z, heading, true, false)
+        print('[RSG-TAXI] Client vehicle created: ' .. vehicle)
+        
+        Wait(500)
+        
+        if DoesEntityExist(vehicle) then
+            print('[RSG-TAXI] Client vehicle exists, setting as mission entity')
+            
+            -- Set as mission entity to prevent despawn
+            SetEntityAsMissionEntity(vehicle, true, true)
+            SetVehicleHasBeenOwnedByPlayer(vehicle, true)
+            
+            -- Warp player into vehicle
+            TaskWarpPedIntoVehicle(PlayerPedId(), vehicle, -1)
+            
+            -- Notify success
+            TriggerEvent('RSGCore:Notify', 'Vehicle spawned successfully (client-side)', 'success')
+            TriggerEvent('RSGCore:Notify', 'You are now a taxi driver!', 'primary')
+            
+            -- Notify server about successful spawn
+            TriggerServerEvent('rsg-taxi:server:clientVehicleSpawned', VehToNet(vehicle), model)
+        else
+            print('[RSG-TAXI] Client vehicle spawn failed')
+        end
+        
+        SetModelAsNoLongerNeeded(modelHash)
+    else
+        print('[RSG-TAXI] Client failed to load model: ' .. model)
+    end
+end)
+
+-- Debug command to test basic vehicle spawning
+RegisterCommand('testclientspawn', function()
+    local playerPed = PlayerPedId()
+    local coords = GetEntityCoords(playerPed)
+    local spawnCoords = vector3(coords.x + 3.0, coords.y + 3.0, coords.z)
+    
+    print('[RSG-TAXI DEBUG] Testing client spawn at: ' .. spawnCoords.x .. ', ' .. spawnCoords.y .. ', ' .. spawnCoords.z)
+    
+    local model = 'cart01'
+    local modelHash = GetHashKey(model)
+    
+    RequestModel(modelHash)
+    local timeout = 0
+    while not HasModelLoaded(modelHash) and timeout < 5000 do
+        Wait(10)
+        timeout = timeout + 10
+    end
+    
+    if HasModelLoaded(modelHash) then
+        local vehicle = CreateVehicle(modelHash, spawnCoords.x, spawnCoords.y, spawnCoords.z, 0.0, true, false)
+        
+        if DoesEntityExist(vehicle) then
+            print('[RSG-TAXI DEBUG] SUCCESS! Vehicle spawned: ' .. vehicle)
+            TriggerEvent('RSGCore:Notify', 'DEBUG: Vehicle spawned successfully!', 'success')
+            TaskWarpPedIntoVehicle(playerPed, vehicle, -1)
+        else
+            print('[RSG-TAXI DEBUG] FAILED! Vehicle does not exist')
+            TriggerEvent('RSGCore:Notify', 'DEBUG: Vehicle spawn failed', 'error')
+        end
+        
+        SetModelAsNoLongerNeeded(modelHash)
+    else
+        print('[RSG-TAXI DEBUG] FAILED! Model did not load')
+        TriggerEvent('RSGCore:Notify', 'DEBUG: Model failed to load', 'error')
+    end
+end, false)
