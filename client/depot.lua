@@ -230,14 +230,14 @@ RegisterNetEvent('rsg-taxi:client:spawnDepotVehicle', function(data)
     -- Check if player already has a taxi vehicle
     RSGCore.Functions.TriggerCallback('rsg-taxi:server:hasActiveTaxiVehicle', function(hasVehicle)
         if hasVehicle then
-            RSGCore.Functions.Notify(Lang:t('error.already_have_taxi_vehicle'), 'error')
+            TriggerEvent('RSGCore:Notify', Lang:t('error.already_have_taxi_vehicle'), 'error')
             return
         end
         
         -- Find a clear spawn location near the depot
         local spawnCoords = GetClearSpawnLocation(depot.coords, depot.heading)
         if not spawnCoords then
-            RSGCore.Functions.Notify(Lang:t('error.no_clear_spawn_location'), 'error')
+            TriggerEvent('RSGCore:Notify', Lang:t('error.no_clear_spawn_location'), 'error')
             return
         end
         
@@ -250,7 +250,7 @@ end)
 function ReturnTaxiVehicleToDepot(vehicle)
     RSGCore.Functions.TriggerCallback('rsg-taxi:server:canReturnVehicle', function(canReturn, reason)
         if not canReturn then
-            RSGCore.Functions.Notify(reason, 'error')
+            TriggerEvent('RSGCore:Notify', reason, 'error')
             return
         end
         
@@ -261,7 +261,7 @@ function ReturnTaxiVehicleToDepot(vehicle)
         SetEntityAsMissionEntity(vehicle, true, true)
         DeleteVehicle(vehicle)
         
-        RSGCore.Functions.Notify(Lang:t('success.vehicle_returned_to_depot'), 'success')
+        TriggerEvent('RSGCore:Notify', Lang:t('success.vehicle_returned_to_depot'), 'success')
     end, VehToNet(vehicle))
 end
 
@@ -322,7 +322,7 @@ end)
 -- Confirm player taxi request
 RegisterNetEvent('rsg-taxi:client:confirmPlayerTaxiRequest', function(data)
     TriggerServerEvent('rsg-taxi:server:requestPlayerTaxi', data.pickup, data.destination)
-    RSGCore.Functions.Notify(Lang:t('info.taxi_request_sent'), 'primary')
+    TriggerEvent('RSGCore:Notify', Lang:t('info.taxi_request_sent'), 'primary')
 end)
 
 -- Request NPC taxi
@@ -360,7 +360,7 @@ end)
 -- Confirm NPC taxi request
 RegisterNetEvent('rsg-taxi:client:confirmNPCTaxiRequest', function(data)
     TriggerServerEvent('rsg-taxi:server:requestNPCTaxi', data.pickup, data.destination)
-    RSGCore.Functions.Notify(Lang:t('info.npc_taxi_called'), 'primary')
+    TriggerEvent('RSGCore:Notify', Lang:t('info.npc_taxi_called'), 'primary')
 end)
 
 -- Vehicle spawned from depot
@@ -369,9 +369,9 @@ RegisterNetEvent('rsg-taxi:client:vehicleSpawnedFromDepot', function(netId)
     if DoesEntityExist(vehicle) then
         -- Set player as driver
         TaskWarpPedIntoVehicle(PlayerPedId(), vehicle, -1)
-        RSGCore.Functions.Notify(Lang:t('success.taxi_vehicle_ready'), 'success')
+        TriggerEvent('RSGCore:Notify', Lang:t('success.taxi_vehicle_ready'), 'success')
         
         -- Show instructions
-        RSGCore.Functions.Notify(Lang:t('info.taxi_driver_instructions'), 'primary', 8000)
+        TriggerEvent('RSGCore:Notify', Lang:t('info.taxi_driver_instructions'), 'primary')
     end
 end)

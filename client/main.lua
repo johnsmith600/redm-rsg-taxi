@@ -179,7 +179,7 @@ function StartTaxiWork()
         if canStart then
             TriggerServerEvent('rsg-taxi:server:startWork')
         else
-            RSGCore.Functions.Notify(reason, 'error')
+            TriggerEvent('RSGCore:Notify', reason, 'error')
         end
     end)
 end
@@ -193,7 +193,7 @@ end
 function SpawnTaxiVehicle()
     RSGCore.Functions.TriggerCallback('rsg-taxi:server:getVehicleSpawnLocations', function(locations)
         if #locations == 0 then
-            RSGCore.Functions.Notify(Lang:t('error.no_spawn_locations'), 'error')
+            TriggerEvent('RSGCore:Notify', Lang:t('error.no_spawn_locations'), 'error')
             return
         end
         
@@ -257,19 +257,19 @@ function ReturnTaxiVehicle()
         TriggerServerEvent('rsg-taxi:server:returnVehicle', currentVehicle)
         currentVehicle = nil
     else
-        RSGCore.Functions.Notify(Lang:t('error.no_vehicle'), 'error')
+        TriggerEvent('RSGCore:Notify', Lang:t('error.no_vehicle'), 'error')
     end
 end
 
 -- Toggle taxi meter
 function ToggleTaxiMeter()
     if not currentVehicle then
-        RSGCore.Functions.Notify(Lang:t('error.no_vehicle'), 'error')
+        TriggerEvent('RSGCore:Notify', Lang:t('error.no_vehicle'), 'error')
         return
     end
     
     if not currentRide then
-        RSGCore.Functions.Notify(Lang:t('error.no_passengers'), 'error')
+        TriggerEvent('RSGCore:Notify', Lang:t('error.no_passengers'), 'error')
         return
     end
     
@@ -291,7 +291,7 @@ function StartTaxiMeter()
     taxiMeter.distance = 0.0
     
     TriggerServerEvent('rsg-taxi:server:startMeter', currentRide.passenger)
-    RSGCore.Functions.Notify(Lang:t('info.taxi_meter_started'), 'primary')
+    TriggerEvent('RSGCore:Notify', Lang:t('info.taxi_meter_started'), 'primary')
 end
 
 -- Stop taxi meter
@@ -302,7 +302,7 @@ function StopTaxiMeter()
     
     taxiMeter.active = false
     TriggerServerEvent('rsg-taxi:server:stopMeter', currentRide.passenger, playerCoords)
-    RSGCore.Functions.Notify(Lang:t('info.taxi_meter_stopped'), 'primary')
+    TriggerEvent('RSGCore:Notify', Lang:t('info.taxi_meter_stopped'), 'primary')
 end
 
 -- Update taxi meter
@@ -541,7 +541,7 @@ end
 -- Events
 RegisterNetEvent('rsg-taxi:client:startWork', function()
     isOnDuty = true
-    RSGCore.Functions.Notify(Lang:t('success.taxi_job_started'), 'success')
+    TriggerEvent('RSGCore:Notify', Lang:t('success.taxi_job_started'), 'success')
 end)
 
 RegisterNetEvent('rsg-taxi:client:stopWork', function()
@@ -549,7 +549,7 @@ RegisterNetEvent('rsg-taxi:client:stopWork', function()
     currentVehicle = nil
     currentRide = nil
     taxiMeter.active = false
-    RSGCore.Functions.Notify(Lang:t('success.taxi_job_stopped'), 'success')
+    TriggerEvent('RSGCore:Notify', Lang:t('success.taxi_job_stopped'), 'success')
 end)
 
 RegisterNetEvent('rsg-taxi:client:spawnSelectedVehicle', function(data)
@@ -568,7 +568,7 @@ end)
 
 RegisterNetEvent('rsg-taxi:client:rideRequest', function(rideData)
     -- Show ride request notification
-    RSGCore.Functions.Notify(Lang:t('notifications.new_ride_request', {location = rideData.destination.name}), 'primary', 10000)
+    TriggerEvent('RSGCore:Notify', Lang:t('notifications.new_ride_request', {location = rideData.destination.name}), 'primary')
     
     -- Show accept/decline menu
     local requestMenu = {
@@ -610,7 +610,7 @@ end)
 
 RegisterNetEvent('rsg-taxi:client:rideAccepted', function(driverId)
     currentRide = {driver = driverId}
-    RSGCore.Functions.Notify(Lang:t('notifications.ride_accepted'), 'success')
+    TriggerEvent('RSGCore:Notify', Lang:t('notifications.ride_accepted'), 'success')
 end)
 
 RegisterNetEvent('rsg-taxi:client:startRide', function(rideData)
@@ -632,7 +632,7 @@ end)
 
 RegisterNetEvent('rsg-taxi:client:meterStopped', function(fare)
     -- Show fare to driver
-    RSGCore.Functions.Notify(Lang:t('info.current_fare', {amount = string.format('%.2f', fare)}), 'primary')
+    TriggerEvent('RSGCore:Notify', Lang:t('info.current_fare', {amount = string.format('%.2f', fare)}), 'primary')
 end)
 
 RegisterNetEvent('rsg-taxi:client:paymentRequest', function(paymentData)
@@ -653,7 +653,7 @@ RegisterNetEvent('rsg-taxi:client:rideCancelled', function(reason)
         rideBlip = nil
     end
     
-    RSGCore.Functions.Notify(Lang:t('notifications.ride_cancelled'), 'error')
+    TriggerEvent('RSGCore:Notify', Lang:t('notifications.ride_cancelled'), 'error')
 end)
 
 RegisterNetEvent('rsg-taxi:client:requestRating', function(driverId)
@@ -746,7 +746,7 @@ RegisterCommand('taxi', function()
     if isTaxiDriver then
         OpenTaxiDriverMenu()
     else
-        RSGCore.Functions.Notify(Lang:t('info.visit_taxi_depot'), 'primary', 5000)
+        TriggerEvent('RSGCore:Notify', Lang:t('info.visit_taxi_depot'), 'primary')
     end
 end)
 
