@@ -5,10 +5,10 @@ Config.Debug = false
 Config.UseTarget = true -- Use rsg-target for interactions
 Config.Locale = 'en'
 
--- Taxi Job Settings
-Config.TaxiJob = 'taxi'
+-- Taxi Job Settings (DEPRECATED - Anyone can be a taxi driver now)
+Config.TaxiJob = 'taxi' -- Not used anymore - kept for compatibility
 Config.MinimumTaxiDrivers = 0 -- Minimum online taxi drivers before NPCs spawn
-Config.MaxTaxiDrivers = 10 -- Maximum taxi drivers allowed online
+Config.MaxTaxiDrivers = 50 -- Maximum taxi drivers allowed online (increased since anyone can drive)
 
 -- Vehicle Settings
 Config.TaxiVehicles = {

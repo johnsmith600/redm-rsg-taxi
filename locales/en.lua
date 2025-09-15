@@ -1,6 +1,6 @@
 local Translations = {
     error = {
-        not_taxi_driver = 'You are not a taxi driver',
+        not_taxi_driver = 'You need to spawn a taxi vehicle to become a driver',
         no_vehicle = 'You need to be in a vehicle',
         not_taxi_vehicle = 'This is not a taxi vehicle',
         already_in_taxi = 'You are already in a taxi',
@@ -48,7 +48,7 @@ local Translations = {
         view_ride_history = 'View your ride history',
         cancel_current_ride = 'Cancel your current ride',
         return_taxi_vehicle = 'Return your taxi vehicle to the depot',
-        spawn_taxi_vehicle = 'Spawn a taxi vehicle from the depot',
+        spawn_taxi_vehicle = 'Spawn a taxi vehicle to become a driver',
         start_taxi_shift = 'Start your taxi driver shift',
         stop_taxi_shift = 'Stop your taxi driver shift',
         toggle_taxi_meter = 'Toggle the taxi meter on/off',

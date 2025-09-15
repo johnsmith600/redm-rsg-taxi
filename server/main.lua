@@ -54,11 +54,8 @@ RegisterNetEvent('rsg-taxi:server:startWork', function()
     
     if not Player then return end
     
-    -- Check if player has taxi job
-    if Player.PlayerData.job.name ~= Config.TaxiJob then
-        TriggerClientEvent('RSGCore:Notify', src, Lang:t('error.not_taxi_driver'), 'error')
-        return
-    end
+    -- Anyone can be a taxi driver by spawning a taxi vehicle
+    -- No job restriction needed
     
     -- Check if already working
     if TaxiDrivers[src] then

@@ -67,15 +67,28 @@ function CleanupTaxiSystem()
     end
 end
 
--- Check if player has taxi job
+-- Check if player is in a taxi vehicle (anyone can be a taxi driver)
 function CheckTaxiJob()
-    if PlayerData.job and PlayerData.job.name == Config.TaxiJob then
-        isTaxiDriver = true
-    else
-        isTaxiDriver = false
-        if isOnDuty then
-            StopTaxiWork()
+    local ped = PlayerPedId()
+    local vehicle = GetVehiclePedIsIn(ped, false)
+    
+    if vehicle ~= 0 then
+        local vehicleModel = GetEntityModel(vehicle)
+        local vehicleName = GetDisplayNameFromVehicleModel(vehicleModel)
+        
+        -- Check if current vehicle is a taxi vehicle
+        for _, taxiModel in ipairs(Config.TaxiVehicles) do
+            if GetHashKey(taxiModel) == vehicleModel then
+                isTaxiDriver = true
+                return
+            end
         end
+    end
+    
+    -- Not in a taxi vehicle
+    isTaxiDriver = false
+    if isOnDuty then
+        StopTaxiWork()
     end
 end
 
@@ -363,6 +376,26 @@ function OpenTaxiDriverMenu()
         }
     }
     
+    -- Always allow vehicle spawning (anyone can be a taxi driver)
+    if not currentVehicle then
+        table.insert(driverMenu, {
+            header = Lang:t('menu.spawn_vehicle'),
+            txt = Lang:t('info.spawn_taxi_vehicle'),
+            params = {
+                event = 'rsg-taxi:client:spawnVehicle'
+            }
+        })
+    else
+        table.insert(driverMenu, {
+            header = Lang:t('menu.return_vehicle'),
+            txt = Lang:t('info.return_taxi_vehicle'),
+            params = {
+                event = 'rsg-taxi:client:returnVehicle'
+            }
+        })
+    end
+    
+    -- Work status controls
     if not isOnDuty then
         table.insert(driverMenu, {
             header = Lang:t('menu.start_work'),
@@ -379,24 +412,6 @@ function OpenTaxiDriverMenu()
                 event = 'rsg-taxi:client:stopWork'
             }
         })
-        
-        if not currentVehicle then
-            table.insert(driverMenu, {
-                header = Lang:t('menu.spawn_vehicle'),
-                txt = Lang:t('info.spawn_taxi_vehicle'),
-                params = {
-                    event = 'rsg-taxi:client:spawnVehicle'
-                }
-            })
-        else
-            table.insert(driverMenu, {
-                header = Lang:t('menu.return_vehicle'),
-                txt = Lang:t('info.return_taxi_vehicle'),
-                params = {
-                    event = 'rsg-taxi:client:returnVehicle'
-                }
-            })
-        end
         
         table.insert(driverMenu, {
             header = Lang:t('menu.toggle_meter'),
@@ -473,13 +488,12 @@ end
 -- Event handler for opening taxi menu
 RegisterNetEvent('rsg-taxi:client:openMenu', function()
     print("^2[RSG-Taxi]^7 Opening taxi menu - isTaxiDriver:", isTaxiDriver)
-    if isTaxiDriver then
-        print("^2[RSG-Taxi]^7 Opening driver menu")
-        OpenTaxiDriverMenu()
-    else
-        print("^2[RSG-Taxi]^7 Opening passenger menu")
-        OpenPassengerMenu()
-    end
+    
+    -- Always show driver menu since anyone can be a taxi driver
+    -- If they're in a taxi vehicle, they get driver options
+    -- If not, they can spawn a taxi vehicle to become a driver
+    print("^2[RSG-Taxi]^7 Opening driver menu (anyone can be a taxi driver)")
+    OpenTaxiDriverMenu()
 end)
 
 -- Create taxi stand blips

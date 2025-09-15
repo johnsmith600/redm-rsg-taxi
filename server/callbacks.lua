@@ -58,11 +58,8 @@ RSGCore.Functions.CreateCallback('rsg-taxi:server:canBecomeTaxiDriver', function
         return
     end
     
-    -- Check if player has taxi job
-    if Player.PlayerData.job.name ~= Config.TaxiJob then
-        cb(false, Lang:t('error.not_taxi_driver'))
-        return
-    end
+    -- Anyone can be a taxi driver by spawning a taxi vehicle
+    -- No job restriction needed
     
     -- Check if already working
     if TaxiDrivers[source] then
