@@ -44,6 +44,8 @@ local Translations = {
         driver_rating = 'Driver rating: %{rating}/5 stars',
         total_rides = 'Total rides: %{count}',
         total_earnings = 'Total earnings: $%{amount}',
+        request_taxi_ride = 'Request a taxi ride',
+        view_ride_history = 'View your ride history',
     },
     menu = {
         taxi_menu = 'Taxi Menu',

@@ -392,11 +392,21 @@ RegisterNetEvent('rsg-taxi:client:updateRideStatus', function(status, data)
     UpdateRideStatus(status, data)
 end)
 
--- Key bindings
-RegisterKeyMapping('taxi', 'Open Taxi Menu', 'keyboard', 'F6')
-RegisterKeyMapping('taximeter', 'Toggle Taxi Meter', 'keyboard', 'F7')
+-- Key bindings (RedM compatible)
+-- Use /taxi command to open taxi menu
+-- Use /taximeter command to toggle taxi meter
 
 -- Commands
+RegisterCommand('taxi', function()
+    TriggerEvent('rsg-taxi:client:openMenu')
+end, false)
+
+RegisterCommand('taximeter', function()
+    if isTaxiDriver and isOnDuty then
+        TriggerEvent('rsg-taxi:client:toggleMeter')
+    end
+end, false)
+
 RegisterCommand('taxidashboard', function()
     if isTaxiDriver and isOnDuty then
         OpenDriverDashboard()
