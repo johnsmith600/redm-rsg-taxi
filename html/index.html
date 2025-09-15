@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSG Taxi System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Taxi Meter -->
+    <div id="taxiMeter" class="ui-panel meter-panel hidden">
+        <div class="panel-header">
+            <i class="fas fa-taxi"></i>
+            <h3>Taxi Meter</h3>
+            <div class="meter-status" id="meterStatus">
+                <span class="status-indicator"></span>
+                <span class="status-text">Inactive</span>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="meter-display">
+                <div class="fare-amount">
+                    <span class="currency">$</span>
+                    <span id="currentFare">0.00</span>
+                </div>
+                <div class="meter-details">
+                    <div class="detail-item">
+                        <i class="fas fa-route"></i>
+                        <span>Distance: <span id="tripDistance">0.0</span>m</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Time: <span id="tripTime">00:00</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment UI -->
+    <div id="paymentUI" class="ui-modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content payment-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-credit-card"></i> Payment</h2>
+                <button class="close-btn" onclick="closePayment()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-summary">
+                    <h3>Ride Summary</h3>
+                    <div class="summary-item">
+                        <span>Driver:</span>
+                        <span id="paymentDriverName">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Distance:</span>
+                        <span id="paymentDistance">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Duration:</span>
+                        <span id="paymentDuration">-</span>
+                    </div>
+                </div>
+                
+                <div class="fare-breakdown">
+                    <h3>Fare Breakdown</h3>
+                    <div class="breakdown-item">
+                        <span>Base Fare:</span>
+                        <span>$<span id="baseFare">0.00</span></span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Distance Fare:</span>
+                        <span>$<span id="distanceFare">0.00</span></span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Time Fare:</span>
+                        <span>$<span id="timeFare">0.00</span></span>
+                    </div>
+                    <div class="breakdown-item total">
+                        <span>Total Fare:</span>
+                        <span>$<span id="totalFare">0.00</span></span>
+                    </div>
+                </div>
+                
+                <div class="tip-section">
+                    <h3>Add Tip (Optional)</h3>
+                    <div class="tip-buttons">
+                        <button class="tip-btn" onclick="setTip(0)">No Tip</button>
+                        <button class="tip-btn" onclick="setTipPercent(10)">10%</button>
+                        <button class="tip-btn" onclick="setTipPercent(15)">15%</button>
+                        <button class="tip-btn" onclick="setTipPercent(20)">20%</button>
+                    </div>
+                    <div class="custom-tip">
+                        <input type="number" id="customTip" placeholder="Custom tip amount" min="0" step="0.01">
+                        <button onclick="setCustomTip()">Set</button>
+                    </div>
+                    <div class="tip-amount">
+                        Tip: $<span id="tipAmount">0.00</span>
+                    </div>
+                </div>
+                
+                <div class="payment-method">
+                    <h3>Payment Method</h3>
+                    <div class="payment-options">
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="cash" checked>
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Cash</span>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="bank">
+                            <i class="fas fa-university"></i>
+                            <span>Bank</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="final-amount">
+                    <h3>Total Amount: $<span id="finalAmount">0.00</span></h3>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePayment()">Cancel</button>
+                <button class="btn btn-primary" onclick="processPayment()">Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating UI -->
+    <div id="ratingUI" class="ui-modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content rating-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-star"></i> Rate Your Driver</h2>
+                <button class="close-btn" onclick="closeRating()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="rating-section">
+                    <h3>How was your ride?</h3>
+                    <div class="star-rating">
+                        <i class="fas fa-star" data-rating="1"></i>
+                        <i class="fas fa-star" data-rating="2"></i>
+                        <i class="fas fa-star" data-rating="3"></i>
+                        <i class="fas fa-star" data-rating="4"></i>
+                        <i class="fas fa-star" data-rating="5"></i>
+                    </div>
+                    <div class="rating-text">
+                        <span id="ratingText">Click to rate</span>
+                    </div>
+                </div>
+                
+                <div class="comment-section">
+                    <h3>Leave a comment (Optional)</h3>
+                    <textarea id="ratingComment" placeholder="Tell us about your experience..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRating()">Skip</button>
+                <button class="btn btn-primary" onclick="submitRating()">Submit Rating</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Dashboard -->
+    <div id="driverDashboard" class="ui-modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content dashboard-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-tachometer-alt"></i> Driver Dashboard</h2>
+                <button class="close-btn" onclick="closeDashboard()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalRides">0</h3>
+                            <p>Total Rides</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>$<span id="totalEarnings">0.00</span></h3>
+                            <p>Total Earnings</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="driverRating">5.0</h3>
+                            <p>Rating</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>$<span id="todayEarnings">0.00</span></h3>
+                            <p>Today's Earnings</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-controls">
+                    <div class="control-section">
+                        <h3>Quick Actions</h3>
+                        <div class="control-buttons">
+                            <button class="control-btn" id="workToggle" onclick="toggleWork()">
+                                <i class="fas fa-play"></i>
+                                <span>Start Work</span>
+                            </button>
+                            <button class="control-btn" onclick="toggleVehicle()">
+                                <i class="fas fa-car"></i>
+                                <span id="vehicleToggleText">Spawn Vehicle</span>
+                            </button>
+                            <button class="control-btn" onclick="toggleMeter()">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Toggle Meter</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="current-ride" id="currentRideSection" style="display: none;">
+                    <h3>Current Ride</h3>
+                    <div class="ride-info">
+                        <div class="ride-detail">
+                            <span>Passenger:</span>
+                            <span id="currentPassenger">-</span>
+                        </div>
+                        <div class="ride-detail">
+                            <span>Destination:</span>
+                            <span id="currentDestination">-</span>
+                        </div>
+                        <div class="ride-detail">
+                            <span>Status:</span>
+                            <span id="currentRideStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDashboard()">Close</button>
+                <button class="btn btn-primary" onclick="openHistory()">View History</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taxi Request UI -->
+    <div id="taxiRequestUI" class="ui-modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content request-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-taxi"></i> Request Taxi</h2>
+                <button class="close-btn" onclick="closeRequest()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="destination-selection">
+                    <h3>Select Destination</h3>
+                    <div class="destination-list" id="destinationList">
+                        <!-- Destinations will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="available-drivers">
+                    <h3>Available Drivers</h3>
+                    <div class="drivers-list" id="driversList">
+                        <!-- Drivers will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="fare-estimate" id="fareEstimate" style="display: none;">
+                    <h3>Estimated Fare</h3>
+                    <div class="estimate-details">
+                        <div class="estimate-item">
+                            <span>Distance:</span>
+                            <span id="estimateDistance">-</span>
+                        </div>
+                        <div class="estimate-item">
+                            <span>Estimated Time:</span>
+                            <span id="estimateTime">-</span>
+                        </div>
+                        <div class="estimate-item total">
+                            <span>Estimated Fare:</span>
+                            <span>$<span id="estimateFare">0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRequest()">Cancel</button>
+                <button class="btn btn-primary" id="requestTaxiBtn" onclick="requestTaxi()" disabled>Request Taxi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ride History UI -->
+    <div id="rideHistoryUI" class="ui-modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content history-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-history"></i> Ride History</h2>
+                <button class="close-btn" onclick="closeHistory()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="history-filters">
+                    <select id="historyFilter">
+                        <option value="all">All Rides</option>
+                        <option value="driver">As Driver</option>
+                        <option value="passenger">As Passenger</option>
+                    </select>
+                    <select id="historyPeriod">
+                        <option value="week">Last Week</option>
+                        <option value="month">Last Month</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+                
+                <div class="history-list" id="historyList">
+                    <!-- History items will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeHistory()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notifications" class="notifications-container"></div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
