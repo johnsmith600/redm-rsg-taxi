@@ -195,7 +195,16 @@ end
 -- Handle going to pickup
 function HandleGoingToPickup(npcId, npcData)
     local vehicleCoords = GetEntityCoords(npcData.vehicle)
-    local distanceToPickup = #(vehicleCoords - npcData.pickupCoords)
+    
+    -- Ensure pickupCoords is a vector3
+    local pickupVec = npcData.pickupCoords
+    if type(npcData.pickupCoords) == 'table' then
+        pickupVec = vector3(npcData.pickupCoords.x or npcData.pickupCoords[1], 
+                           npcData.pickupCoords.y or npcData.pickupCoords[2], 
+                           npcData.pickupCoords.z or npcData.pickupCoords[3])
+    end
+    
+    local distanceToPickup = #(vehicleCoords - pickupVec)
     
     if distanceToPickup < 10.0 then
         -- Arrived at pickup
@@ -243,7 +252,16 @@ end
 -- Handle driving to destination
 function HandleDrivingToDestination(npcId, npcData)
     local vehicleCoords = GetEntityCoords(npcData.vehicle)
-    local distanceToDestination = #(vehicleCoords - npcData.destination.coords)
+    
+    -- Ensure destination coords is a vector3
+    local destVec = npcData.destination.coords
+    if type(npcData.destination.coords) == 'table' then
+        destVec = vector3(npcData.destination.coords.x or npcData.destination.coords[1], 
+                         npcData.destination.coords.y or npcData.destination.coords[2], 
+                         npcData.destination.coords.z or npcData.destination.coords[3])
+    end
+    
+    local distanceToDestination = #(vehicleCoords - destVec)
     
     if distanceToDestination < 15.0 then
         -- Arrived at destination
@@ -289,9 +307,15 @@ end
 function FindNPCSpawnLocation(pickupCoords)
     local spawnLocations = {}
     
+    -- Convert pickupCoords to vector3 if it's a table
+    local pickup = pickupCoords
+    if type(pickupCoords) == 'table' then
+        pickup = vector3(pickupCoords.x or pickupCoords[1], pickupCoords.y or pickupCoords[2], pickupCoords.z or pickupCoords[3])
+    end
+    
     -- Add configured spawn locations
     for _, location in ipairs(Config.VehicleSpawnLocations) do
-        local distance = #(pickupCoords - location.coords)
+        local distance = #(pickup - vector3(location.coords.x, location.coords.y, location.coords.z))
         if distance > 100.0 and distance < 1000.0 then -- Not too close, not too far
             table.insert(spawnLocations, {
                 x = location.coords.x,
@@ -314,7 +338,19 @@ end
 
 -- Calculate ETA
 function CalculateETA(from, to)
-    local distance = #(from - to)
+    -- Convert coordinates to vector3 if they're tables
+    local fromVec = from
+    local toVec = to
+    
+    if type(from) == 'table' then
+        fromVec = vector3(from.x or from[1], from.y or from[2], from.z or from[3])
+    end
+    
+    if type(to) == 'table' then
+        toVec = vector3(to.x or to[1], to.y or to[2], to.z or to[3])
+    end
+    
+    local distance = #(fromVec - toVec)
     local estimatedSpeed = 20.0 -- Average speed in units per second
     return math.ceil(distance / estimatedSpeed / 60) -- Return in minutes
 end
