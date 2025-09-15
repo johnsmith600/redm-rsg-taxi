@@ -398,6 +398,7 @@ end)
 
 -- Commands
 RegisterCommand('taxi', function()
+    print("^2[RSG-Taxi]^7 Taxi command triggered")
     TriggerEvent('rsg-taxi:client:openMenu')
 end, false)
 

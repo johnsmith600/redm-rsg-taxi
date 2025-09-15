@@ -46,6 +46,13 @@ local Translations = {
         total_earnings = 'Total earnings: $%{amount}',
         request_taxi_ride = 'Request a taxi ride',
         view_ride_history = 'View your ride history',
+        cancel_current_ride = 'Cancel your current ride',
+        return_taxi_vehicle = 'Return your taxi vehicle to the depot',
+        spawn_taxi_vehicle = 'Spawn a taxi vehicle from the depot',
+        start_taxi_shift = 'Start your taxi driver shift',
+        stop_taxi_shift = 'Stop your taxi driver shift',
+        toggle_taxi_meter = 'Toggle the taxi meter on/off',
+        view_driver_stats = 'View your driver statistics and earnings',
     },
     menu = {
         taxi_menu = 'Taxi Menu',
@@ -63,6 +70,8 @@ local Translations = {
         ride_history = 'Ride History',
         driver_stats = 'Driver Statistics',
         settings = 'Settings',
+        accept = 'Accept',
+        decline = 'Decline',
         close = 'Close',
     },
     ui = {

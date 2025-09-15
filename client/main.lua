@@ -355,6 +355,7 @@ end
 
 -- Open taxi driver menu
 function OpenTaxiDriverMenu()
+    print("^2[RSG-Taxi]^7 OpenTaxiDriverMenu called")
     local driverMenu = {
         {
             header = Lang:t('menu.taxi_menu'),
@@ -426,6 +427,7 @@ end
 
 -- Open passenger menu
 function OpenPassengerMenu()
+    print("^2[RSG-Taxi]^7 OpenPassengerMenu called")
     local passengerMenu = {
         {
             header = Lang:t('menu.passenger_menu'),
@@ -467,6 +469,18 @@ function OpenPassengerMenu()
     
     exports['rsg-menu']:openMenu(passengerMenu)
 end
+
+-- Event handler for opening taxi menu
+RegisterNetEvent('rsg-taxi:client:openMenu', function()
+    print("^2[RSG-Taxi]^7 Opening taxi menu - isTaxiDriver:", isTaxiDriver)
+    if isTaxiDriver then
+        print("^2[RSG-Taxi]^7 Opening driver menu")
+        OpenTaxiDriverMenu()
+    else
+        print("^2[RSG-Taxi]^7 Opening passenger menu")
+        OpenPassengerMenu()
+    end
+end)
 
 -- Create taxi stand blips
 function CreateTaxiStandBlips()
