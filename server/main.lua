@@ -632,6 +632,111 @@ RSGCore.Functions.CreateCallback('rsg-taxi:server:getTopDrivers', function(sourc
     end)
 end)
 
+-- Depot System Events
+RegisterNetEvent('rsg-taxi:server:spawnDepotVehicle', function(model, coords, heading)
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    -- Check if player already has a taxi vehicle
+    if TaxiDrivers[src] and TaxiDrivers[src].vehicle then
+        TriggerClientEvent('RSGCore:Notify', src, Lang:t('error.already_have_taxi_vehicle'), 'error')
+        return
+    end
+    
+    -- Spawn the vehicle
+    local vehicle = CreateVehicle(GetHashKey(model), coords.x, coords.y, coords.z, heading, true, false)
+    if DoesEntityExist(vehicle) then
+        -- Set vehicle properties
+        SetVehicleNumberPlateText(vehicle, 'TAXI' .. src)
+        SetVehicleEngineOn(vehicle, false, false, false)
+        
+        -- Register as taxi driver
+        TaxiDrivers[src] = {
+            name = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname,
+            vehicle = vehicle,
+            coords = coords,
+            passengers = 0,
+            earnings = TaxiDrivers[src] and TaxiDrivers[src].earnings or 0,
+            rides = TaxiDrivers[src] and TaxiDrivers[src].rides or 0,
+            rating = TaxiDrivers[src] and TaxiDrivers[src].rating or Config.RatingSystem.DefaultRating,
+            onDuty = false
+        }
+        
+        -- Notify client
+        TriggerClientEvent('rsg-taxi:client:vehicleSpawnedFromDepot', src, NetworkGetNetworkIdFromEntity(vehicle))
+        TriggerClientEvent('RSGCore:Notify', src, Lang:t('success.taxi_vehicle_spawned'), 'success')
+    else
+        TriggerClientEvent('RSGCore:Notify', src, Lang:t('error.vehicle_spawn_failed'), 'error')
+    end
+end)
+
+RegisterNetEvent('rsg-taxi:server:returnVehicleToDepot', function(netId)
+    local src = source
+    local vehicle = NetworkGetEntityFromNetworkId(netId)
+    
+    if DoesEntityExist(vehicle) then
+        -- Remove from taxi drivers
+        if TaxiDrivers[src] then
+            TaxiDrivers[src].vehicle = nil
+            TaxiDrivers[src].onDuty = false
+        end
+        
+        -- Delete vehicle
+        DeleteEntity(vehicle)
+        TriggerClientEvent('RSGCore:Notify', src, Lang:t('success.vehicle_returned'), 'success')
+    end
+end)
+
+RegisterNetEvent('rsg-taxi:server:requestPlayerTaxi', function(pickup, destination)
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    -- Find available taxi drivers
+    local availableDrivers = {}
+    for driverId, driver in pairs(TaxiDrivers) do
+        if driver.onDuty and driver.passengers == 0 and driverId ~= src then
+            table.insert(availableDrivers, {
+                id = driverId,
+                name = driver.name,
+                coords = driver.coords,
+                distance = #(pickup.coords - driver.coords)
+            })
+        end
+    end
+    
+    if #availableDrivers == 0 then
+        TriggerClientEvent('RSGCore:Notify', src, Lang:t('error.no_available_drivers'), 'error')
+        return
+    end
+    
+    -- Sort by distance
+    table.sort(availableDrivers, function(a, b) return a.distance < b.distance end)
+    
+    -- Send request to closest driver
+    local closestDriver = availableDrivers[1]
+    local estimatedFare = CalculateEstimatedFare(pickup.coords, destination)
+    
+    TriggerClientEvent('rsg-taxi:client:rideRequest', closestDriver.id, {
+        passengerId = src,
+        passengerName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname,
+        pickup = pickup,
+        destination = destination,
+        estimatedFare = estimatedFare
+    })
+    
+    TriggerClientEvent('RSGCore:Notify', src, Lang:t('info.taxi_request_sent_to_driver', {driver = closestDriver.name}), 'primary')
+end)
+
+RegisterNetEvent('rsg-taxi:server:requestNPCTaxi', function(pickup, destination)
+    local src = source
+    
+    -- Spawn NPC taxi
+    TriggerClientEvent('rsg-taxi:client:spawnNPCTaxi', src, pickup, destination)
+    TriggerClientEvent('RSGCore:Notify', src, Lang:t('info.npc_taxi_dispatched'), 'primary')
+end)
+
 -- Commands
 RSGCore.Commands.Add('taxi', Lang:t('commands.taxi'), {}, false, function(source, args)
     TriggerClientEvent('rsg-taxi:client:openMenu', source)

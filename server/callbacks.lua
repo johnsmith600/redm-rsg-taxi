@@ -330,3 +330,49 @@ RSGCore.Functions.CreateCallback('rsg-taxi:server:getServerStats', function(sour
     
     cb(stats)
 end)
+
+-- Depot System Callbacks
+RSGCore.Functions.CreateCallback('rsg-taxi:server:hasActiveTaxiVehicle', function(source, cb)
+    local hasVehicle = TaxiDrivers[source] and TaxiDrivers[source].vehicle ~= nil
+    cb(hasVehicle)
+end)
+
+RSGCore.Functions.CreateCallback('rsg-taxi:server:canReturnVehicle', function(source, cb, netId)
+    local vehicle = NetworkGetEntityFromNetworkId(netId)
+    
+    if not DoesEntityExist(vehicle) then
+        cb(false, Lang:t('error.vehicle_not_found'))
+        return
+    end
+    
+    -- Check if player has active ride
+    if ActiveRides[source] then
+        cb(false, Lang:t('error.cannot_return_during_ride'))
+        return
+    end
+    
+    -- Check if vehicle belongs to player
+    if not TaxiDrivers[source] or TaxiDrivers[source].vehicle ~= vehicle then
+        cb(false, Lang:t('error.not_your_vehicle'))
+        return
+    end
+    
+    cb(true)
+end)
+
+RSGCore.Functions.CreateCallback('rsg-taxi:server:getActiveTaxiDrivers', function(source, cb)
+    local drivers = {}
+    
+    for driverId, driver in pairs(TaxiDrivers) do
+        if driver.onDuty and driver.vehicle and driverId ~= source then
+            table.insert(drivers, {
+                id = driverId,
+                name = driver.name,
+                coords = driver.coords,
+                passengers = driver.passengers
+            })
+        end
+    end
+    
+    cb(drivers)
+end)

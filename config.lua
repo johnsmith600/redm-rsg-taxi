@@ -18,6 +18,56 @@ Config.TaxiVehicles = {
     'coach2',  -- Stagecoach
 }
 
+-- Taxi Depot Locations (where players get vehicles)
+Config.TaxiDepots = {
+    {
+        name = 'Valentine Taxi Depot',
+        coords = vector3(-1807.15, -433.42, 158.83),
+        heading = 90.0,
+        blip = {
+            sprite = 'blip_stable',
+            color = 'YELLOW'
+        }
+    },
+    {
+        name = 'Annesburg Taxi Depot',
+        coords = vector3(2930.95, 1348.75, 44.1),
+        heading = 180.0,
+        blip = {
+            sprite = 'blip_stable',
+            color = 'YELLOW'
+        }
+    },
+    {
+        name = 'Blackwater Taxi Depot',
+        coords = vector3(-3664.0, -2628.0, -14.0),
+        heading = 270.0,
+        blip = {
+            sprite = 'blip_stable',
+            color = 'YELLOW'
+        }
+    },
+    {
+        name = 'Rhodes Taxi Depot',
+        coords = vector3(1346.0, -1312.0, 77.0),
+        heading = 0.0,
+        blip = {
+            sprite = 'blip_stable',
+            color = 'YELLOW'
+        }
+    },
+    {
+        name = 'Strawberry Taxi Depot',
+        coords = vector3(-802.0, -1324.0, 43.0),
+        heading = 45.0,
+        blip = {
+            sprite = 'blip_stable',
+            color = 'YELLOW'
+        }
+    }
+}
+
+-- Legacy vehicle spawn locations (kept for compatibility)
 Config.VehicleSpawnLocations = {
     {coords = vector3(-1807.15, -433.42, 158.83), heading = 90.0}, -- Valentine
     {coords = vector3(2930.95, 1348.75, 44.1), heading = 180.0},   -- Annesburg
@@ -112,8 +162,51 @@ Config.PickupLocations = {
     {coords = vector3(-1805.0, -364.0, 164.0), name = "Strawberry Hotel"},
 }
 
+-- Taxi Request Locations (where players can call taxis)
+Config.TaxiRequestLocations = {
+    -- Valentine Area
+    {coords = vector3(-1798.0, -374.0, 158.0), name = "Valentine General Store", blip = true},
+    {coords = vector3(-1786.0, -387.0, 160.0), name = "Valentine Saloon", blip = true},
+    {coords = vector3(-1823.0, -354.0, 164.0), name = "Valentine Bank", blip = true},
+    {coords = vector3(-1800.0, -430.0, 158.0), name = "Valentine Train Station", blip = true},
+    
+    -- Saint Denis Area  
+    {coords = vector3(2644.0, -1293.0, 52.0), name = "Saint Denis Market", blip = true},
+    {coords = vector3(2632.0, -1226.0, 53.0), name = "Saint Denis Saloon", blip = true},
+    {coords = vector3(2644.0, -1282.0, 52.0), name = "Saint Denis Bank", blip = true},
+    {coords = vector3(2750.0, -1230.0, 49.0), name = "Saint Denis Train Station", blip = true},
+    
+    -- Blackwater Area
+    {coords = vector3(-3700.0, -2599.0, -13.0), name = "Blackwater General Store", blip = true},
+    {coords = vector3(-3708.0, -2617.0, -13.0), name = "Blackwater Saloon", blip = true},
+    {coords = vector3(-3664.0, -2628.0, -14.0), name = "Blackwater Bank", blip = true},
+    {coords = vector3(-3760.0, -2650.0, -13.0), name = "Blackwater Train Station", blip = true},
+    
+    -- Rhodes Area
+    {coords = vector3(1329.0, -1293.0, 77.0), name = "Rhodes General Store", blip = true},
+    {coords = vector3(1341.0, -1317.0, 77.0), name = "Rhodes Saloon", blip = true},
+    {coords = vector3(1294.0, -1303.0, 77.0), name = "Rhodes Bank", blip = true},
+    {coords = vector3(1230.0, -1300.0, 76.0), name = "Rhodes Train Station", blip = true},
+    
+    -- Strawberry Area
+    {coords = vector3(-1792.0, -386.0, 160.0), name = "Strawberry General Store", blip = true},
+    {coords = vector3(-1805.0, -398.0, 158.0), name = "Strawberry Hotel", blip = true}
+}
+
 -- Blip Settings
 Config.Blips = {
+    TaxiDepot = {
+        sprite = 'blip_stable',
+        color = 'YELLOW',
+        scale = 0.8,
+        name = 'Taxi Depot'
+    },
+    TaxiRequest = {
+        sprite = 'blip_taxi',
+        color = 'BLIP_MODIFIER_MP_COLOR_32', 
+        scale = 0.6,
+        name = 'Call Taxi'
+    },
     TaxiStand = {
         sprite = 'blip_taxi',
         color = 'BLIP_MODIFIER_MP_COLOR_32',

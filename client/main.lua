@@ -17,6 +17,21 @@ local taxiBlips = {}
 local driverBlips = {}
 local rideBlip = nil
 
+-- Helper function to get vehicle display names (RedM compatible)
+local function GetVehicleDisplayName(model)
+    local vehicleNames = {
+        ['buggy01'] = 'Horse Buggy',
+        ['cart01'] = 'Simple Cart',
+        ['wagon02'] = 'Covered Wagon',
+        ['coach2'] = 'Stagecoach',
+        ['coach3'] = 'Luxury Coach',
+        ['coach4'] = 'Mail Coach',
+        ['coach5'] = 'Prison Wagon',
+        ['coach6'] = 'Wedding Buggy'
+    }
+    return vehicleNames[model] or model:upper()
+end
+
 -- Initialize
 CreateThread(function()
     while true do
@@ -74,7 +89,6 @@ function CheckTaxiJob()
     
     if vehicle ~= 0 then
         local vehicleModel = GetEntityModel(vehicle)
-        local vehicleName = GetDisplayNameFromVehicleModel(vehicleModel)
         
         -- Check if current vehicle is a taxi vehicle
         for _, taxiModel in ipairs(Config.TaxiVehicles) do
@@ -214,7 +228,7 @@ function ShowVehicleSelectionMenu(spawnLocation)
     
     for _, vehicle in ipairs(Config.TaxiVehicles) do
         table.insert(vehicleMenu, {
-            header = GetDisplayNameFromVehicleModel(vehicle),
+            header = GetVehicleDisplayName(vehicle),
             txt = Lang:t('ui.vehicle_model') .. ': ' .. vehicle,
             params = {
                 event = 'rsg-taxi:client:spawnSelectedVehicle',
@@ -732,7 +746,7 @@ RegisterCommand('taxi', function()
     if isTaxiDriver then
         OpenTaxiDriverMenu()
     else
-        OpenPassengerMenu()
+        RSGCore.Functions.Notify(Lang:t('info.visit_taxi_depot'), 'primary', 5000)
     end
 end)
 
