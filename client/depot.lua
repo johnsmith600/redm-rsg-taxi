@@ -224,15 +224,27 @@ end
 
 -- Spawn vehicle from depot
 RegisterNetEvent('rsg-taxi:client:spawnDepotVehicle', function(data)
+    print('[RSG-TAXI MENU] Vehicle selection event triggered!')
+    print('[RSG-TAXI MENU] Data received: ' .. json.encode(data))
+    
     local model = data.model
     local depot = data.depot
     
+    print('[RSG-TAXI MENU] Selected model: ' .. tostring(model))
+    print('[RSG-TAXI MENU] Depot: ' .. tostring(depot and depot.name or 'nil'))
+    
     -- Check if player already has a taxi vehicle
+    print('[RSG-TAXI MENU] Checking if player has active taxi vehicle...')
     RSGCore.Functions.TriggerCallback('rsg-taxi:server:hasActiveTaxiVehicle', function(hasVehicle)
+        print('[RSG-TAXI MENU] Callback result - hasVehicle: ' .. tostring(hasVehicle))
+        
         if hasVehicle then
+            print('[RSG-TAXI MENU] Player already has vehicle, aborting spawn')
             TriggerEvent('RSGCore:Notify', Lang:t('error.already_have_taxi_vehicle'), 'error')
             return
         end
+        
+        print('[RSG-TAXI MENU] Player can spawn vehicle, proceeding...')
         
         -- Find a clear spawn location near the depot
         local spawnCoords = GetClearSpawnLocation(depot.coords, depot.heading)
@@ -414,7 +426,9 @@ end)
 
 -- Client-side vehicle spawn attempt
 RegisterNetEvent('rsg-taxi:client:tryClientSpawn', function(model, coords, heading)
-    print('[RSG-TAXI] Attempting client-side vehicle spawn: ' .. model)
+    print('[RSG-TAXI CLIENT] Attempting client-side vehicle spawn: ' .. model)
+    print('[RSG-TAXI CLIENT] Spawn coordinates: ' .. coords.x .. ', ' .. coords.y .. ', ' .. coords.z)
+    print('[RSG-TAXI CLIENT] Heading: ' .. heading)
     
     local modelHash = GetHashKey(model)
     print('[RSG-TAXI] Client model hash: ' .. modelHash)
@@ -497,4 +511,21 @@ RegisterCommand('testclientspawn', function()
         print('[RSG-TAXI DEBUG] FAILED! Model did not load')
         TriggerEvent('RSGCore:Notify', 'DEBUG: Model failed to load', 'error')
     end
+end, false)
+
+-- Direct spawn command that bypasses callback system
+RegisterCommand('testdepotspawn', function()
+    local playerPed = PlayerPedId()
+    local coords = GetEntityCoords(playerPed)
+    local spawnCoords = vector3(coords.x + 5.0, coords.y + 5.0, coords.z)
+    
+    print('[RSG-TAXI DIRECT] Testing direct depot spawn')
+    
+    -- Use the same logic as the depot system
+    local model = 'cart01'
+    
+    -- Trigger the client spawn directly
+    TriggerEvent('rsg-taxi:client:tryClientSpawn', model, spawnCoords, 0.0)
+    
+    TriggerEvent('RSGCore:Notify', 'Testing direct depot spawn...', 'primary')
 end, false)

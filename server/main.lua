@@ -821,6 +821,42 @@ RegisterNetEvent('rsg-taxi:server:clientVehicleSpawned', function(netId, model)
     end
 end)
 
+-- Callback to check if player has active taxi vehicle
+RSGCore.Functions.CreateCallback('rsg-taxi:server:hasActiveTaxiVehicle', function(source, cb)
+    local src = source
+    print('[RSG-TAXI CALLBACK] Checking if player ' .. src .. ' has active taxi vehicle')
+    
+    local hasVehicle = TaxiDrivers[src] and TaxiDrivers[src].vehicle and DoesEntityExist(TaxiDrivers[src].vehicle)
+    print('[RSG-TAXI CALLBACK] Result: ' .. tostring(hasVehicle))
+    
+    cb(hasVehicle)
+end)
+
+-- Callback to check if player can return vehicle
+RSGCore.Functions.CreateCallback('rsg-taxi:server:canReturnVehicle', function(source, cb)
+    local src = source
+    print('[RSG-TAXI CALLBACK] Checking if player ' .. src .. ' can return vehicle')
+    
+    if not TaxiDrivers[src] or not TaxiDrivers[src].vehicle then
+        cb(false, 'You do not have an active taxi vehicle')
+        return
+    end
+    
+    local vehicle = TaxiDrivers[src].vehicle
+    if not DoesEntityExist(vehicle) then
+        cb(false, 'Your taxi vehicle no longer exists')
+        return
+    end
+    
+    -- Check if player has passengers
+    if TaxiDrivers[src].passengers and TaxiDrivers[src].passengers > 0 then
+        cb(false, 'You cannot return the vehicle while you have passengers')
+        return
+    end
+    
+    cb(true)
+end)
+
 RegisterNetEvent('rsg-taxi:server:returnVehicleToDepot', function(netId)
     local src = source
     local vehicle = NetworkGetEntityFromNetworkId(netId)
