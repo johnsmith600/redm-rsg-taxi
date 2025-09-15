@@ -275,20 +275,28 @@ function GetClearSpawnLocation(coords, heading)
     local maxAttempts = 10
     local spawnRadius = 5.0
     
+    print('[RSG-TAXI] Looking for clear spawn location near: ' .. coords.x .. ', ' .. coords.y .. ', ' .. coords.z)
+    
     while attempts < maxAttempts do
         local offsetX = math.random(-spawnRadius, spawnRadius)
         local offsetY = math.random(-spawnRadius, spawnRadius)
         local testCoords = vector3(coords.x + offsetX, coords.y + offsetY, coords.z)
         
-        -- Check if location is clear
-        if IsAreaClear(testCoords, 3.0, true, false, false, false, false) then
+        print('[RSG-TAXI] Testing spawn location: ' .. testCoords.x .. ', ' .. testCoords.y .. ', ' .. testCoords.z)
+        
+        -- For RedM, we'll use a simpler approach - just check if there are no vehicles nearby
+        local nearbyVehicles = GetClosestVehicle(testCoords.x, testCoords.y, testCoords.z, 3.0, 0, 70)
+        if nearbyVehicles == 0 or not DoesEntityExist(nearbyVehicles) then
+            print('[RSG-TAXI] Clear location found at attempt: ' .. attempts + 1)
             return testCoords
         end
         
         attempts = attempts + 1
     end
     
-    return nil
+    print('[RSG-TAXI] No clear location found after ' .. maxAttempts .. ' attempts')
+    -- If no clear location found, just use the original coordinates with a small offset
+    return vector3(coords.x + 2.0, coords.y + 2.0, coords.z)
 end
 
 -- Request player taxi
@@ -371,10 +379,22 @@ end)
 RegisterNetEvent('rsg-taxi:client:vehicleSpawnedFromDepot', function(netId)
     print('[RSG-TAXI] Received vehicle spawn event with netId: ' .. netId)
     
+    -- Wait a moment for the vehicle to be networked
+    Wait(200)
+    
     local vehicle = NetToVeh(netId)
     print('[RSG-TAXI] Converted to vehicle ID: ' .. vehicle)
     
-    if DoesEntityExist(vehicle) then
+    -- Try multiple times to get the vehicle
+    local attempts = 0
+    while (not DoesEntityExist(vehicle) or vehicle == 0) and attempts < 10 do
+        Wait(100)
+        vehicle = NetToVeh(netId)
+        attempts = attempts + 1
+        print('[RSG-TAXI] Attempt ' .. attempts .. ' to get vehicle, ID: ' .. vehicle)
+    end
+    
+    if DoesEntityExist(vehicle) and vehicle ~= 0 then
         print('[RSG-TAXI] Vehicle exists, warping player into vehicle')
         
         -- Set player as driver
@@ -384,7 +404,7 @@ RegisterNetEvent('rsg-taxi:client:vehicleSpawnedFromDepot', function(netId)
         -- Show instructions
         TriggerEvent('RSGCore:Notify', Lang:t('info.taxi_driver_instructions'), 'primary')
     else
-        print('[RSG-TAXI] Vehicle does not exist on client side')
+        print('[RSG-TAXI] Vehicle does not exist on client side after ' .. attempts .. ' attempts')
         TriggerEvent('RSGCore:Notify', 'Vehicle spawn failed - vehicle not found', 'error')
     end
 end)

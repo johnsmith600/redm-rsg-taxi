@@ -662,14 +662,45 @@ RegisterNetEvent('rsg-taxi:server:spawnDepotVehicle', function(model, coords, he
     end
     
     if not HasModelLoaded(modelHash) then
-        print('[RSG-TAXI] Failed to load model: ' .. model)
-        TriggerClientEvent('RSGCore:Notify', src, 'Failed to load vehicle model: ' .. model, 'error')
-        return
+        print('[RSG-TAXI] Failed to load model: ' .. model .. ', trying fallback models')
+        
+        -- Try fallback models
+        local fallbackModels = {'buggy01', 'cart01', 'wagon02'}
+        local fallbackWorked = false
+        
+        for _, fallbackModel in ipairs(fallbackModels) do
+            if fallbackModel ~= model then
+                local fallbackHash = GetHashKey(fallbackModel)
+                RequestModel(fallbackHash)
+                local fallbackTimeout = 0
+                while not HasModelLoaded(fallbackHash) and fallbackTimeout < 3000 do
+                    Wait(10)
+                    fallbackTimeout = fallbackTimeout + 10
+                end
+                
+                if HasModelLoaded(fallbackHash) then
+                    print('[RSG-TAXI] Fallback model loaded: ' .. fallbackModel)
+                    modelHash = fallbackHash
+                    model = fallbackModel
+                    fallbackWorked = true
+                    break
+                end
+            end
+        end
+        
+        if not fallbackWorked then
+            print('[RSG-TAXI] All models failed to load')
+            TriggerClientEvent('RSGCore:Notify', src, 'Failed to load any vehicle model', 'error')
+            return
+        end
     end
     
     -- Spawn the vehicle
     local vehicle = CreateVehicle(modelHash, coords.x, coords.y, coords.z, heading, true, false)
     print('[RSG-TAXI] Vehicle created with ID: ' .. vehicle)
+    
+    -- Wait a moment for the vehicle to be properly created and networked
+    Wait(100)
     
     if DoesEntityExist(vehicle) then
         print('[RSG-TAXI] Vehicle exists, setting properties')
